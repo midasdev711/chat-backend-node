@@ -85,10 +85,15 @@ app.ws('/ws/chat/:room_id', function(ws, req) {
   ws.on('message', function(msg) {
     console.log(Object.keys(connections[room_id]))
     for (let key in connections[room_id]) {
-      let newMsg = JSON.parse(msg);
-      newMsg['type'] = newMsg.message_type
-      connections[room_id][key].send(JSON.stringify(newMsg));
-      saveMessage(newMsg);
+      if (msg == "PING") {
+        console.log("PONG");
+        // connections[room_id][key].send(JSON.stringify(newMsg));
+      } else {
+        let newMsg = JSON.parse(msg);
+        newMsg['type'] = newMsg.message_type
+        connections[room_id][key].send(JSON.stringify(newMsg));
+        saveMessage(newMsg);
+      }
     }
   });
 
