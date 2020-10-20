@@ -39,17 +39,18 @@ async function queryDB(query) {
   })
 }
 
-function saveMessage(msg) {
+async function saveMessage(msg) {
+  let created_at = new Date().toISOString()
   if (msg.room_id) {
     var query = `
-      INSERT INTO chat_message (sender, receiver, text, message_type, room_id) VALUES ('${msg.sender}', '${msg.receiver}', ${msg.message}, ${msg.message_type}, '${msg.room_id}')
+      INSERT INTO chat_message (sender, receiver, text, message_type, room_id, created_at) VALUES ('${msg.sender}', '${msg.receiver}', '${msg.message}', '${msg.message_type}', '${msg.room_id}', '${created_at}')
     `;
   } else {
     var query = `
-      INSERT INTO chat_message (sender, receiver, text, message_type) VALUES ('${msg.sender}', '${msg.receiver}', ${msg.message}, ${msg.message_type})
+      INSERT INTO chat_message (sender, receiver, text, message_type, created_at) VALUES ('${msg.sender}', '${msg.receiver}', '${msg.message}', '${msg.message_type}', '${created_at}')
     `;
   }
-  queryDB(query);
+  return await queryDB(query);
 }
 
 async function loadMessages(payload) {
@@ -86,15 +87,14 @@ app.ws('/ws/chat/:room_id', function(ws, req) {
     for (let key in connections[room_id]) {
       let newMsg = JSON.parse(msg);
       newMsg['type'] = newMsg.message_type
-      saveMessage(newMsg);
       connections[room_id][key].send(JSON.stringify(newMsg));
+      saveMessage(newMsg);
     }
   });
 
   ws.on('close', function clear() {
     delete connections[room_id][id]
   });
-  console.log('socket', req.testing);
 });
 
 app.listen(8000);
